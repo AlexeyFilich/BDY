@@ -1,21 +1,24 @@
 import * as vscode from 'vscode';
-import { PanelProvider } from './panel';
-import { panelEventHandler } from './panelEventHandler'
+import { PanelProvider, panelEventHandler } from './panel';
+// import { panelEventHandler } from './panelEventHandler'
 
-export function activate(context: vscode.ExtensionContext) {
+let statusBar: vscode.StatusBarItem;
+
+export function activate({ subscriptions }: vscode.ExtensionContext, context: vscode.ExtensionContext) {
     console.log('[Better Done Yourself] Starting.');
 
     const panelProvider = new PanelProvider(vscode.workspace.rootPath!);
     var panel = vscode.window.createTreeView('bdypanel', { treeDataProvider: panelProvider });
     panel.onDidChangeSelection(function(event) {
         if (event.selection.length != 0) {
-            panelEventHandler(event.selection[0]);
+            panelEventHandler({ object: event.selection[0]});
         }
+        panelProvider.refresh();
     });
 
-    let disposable = vscode.commands.registerCommand('bdy.helloWorld', () => {
-        vscode.window.showInformationMessage('Hello World from BDY! Ale');
-    });
+    // statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 9999999);
+    // statusBar.text = "Hello!";
+    // statusBar.show();
 }
 
 export function deactivate() {

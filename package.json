@@ -14,12 +14,6 @@
     ],
     "main": "./build/extension.js",
     "contributes": {
-        "commands": [
-            {
-                "command": "bdy.helloWorld",
-                "title": "Hello World"
-			}
-        ],
         "viewsContainers": {
             "activitybar": [
                 {
