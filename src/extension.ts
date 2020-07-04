@@ -8,7 +8,7 @@ export function activate({ subscriptions }: vscode.ExtensionContext, context: vs
     console.log('[Better Done Yourself] Starting.');
 
     const panelProvider = new PanelProvider(vscode.workspace.rootPath!);
-    var panel = vscode.window.createTreeView('bdypanel', { treeDataProvider: panelProvider });
+    let panel = vscode.window.createTreeView('bdypanel', { treeDataProvider: panelProvider });
     panel.onDidChangeSelection(function(event) {
         if (event.selection.length != 0) {
             panelEventHandler({ object: event.selection[0]});
