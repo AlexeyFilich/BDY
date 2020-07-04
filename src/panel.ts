@@ -18,11 +18,6 @@ class PanelButton extends vscode.TreeItem {
         this.nested = new Array();
     }
 
-    // iconPath = {
-    //     light: path.join(__filename, '..', '..', 'resources', this.icon),
-    //     dark: path.join(__filename, '..', '..', 'resources', this.icon)
-    // }
-
     get tooltip(): string {
         return this.description_;
     }
@@ -42,6 +37,13 @@ class PanelButton extends vscode.TreeItem {
     setCollapsibleExpanded() {
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     }
+
+    setIcon(light: string, dark: string) {
+        this.iconPath = {    
+            light: path.join(__filename, '..', '..', 'resources', 'light', light),
+            dark: path.join(__filename, '..', '..', 'resources', 'dark', dark)
+        };
+    }
 }   
 
 let panelButtonArray: PanelButton[] = [
@@ -50,11 +52,7 @@ let panelButtonArray: PanelButton[] = [
     new PanelButton('Open keybindings.json', 'Open user keybindings.json file', []),
     new PanelButton('Comment Markers', '-', [
         new PanelButton('Update Markers', '-', [])
-    ]),
-    new PanelButton('Test1', '-', []),
-    new PanelButton('Test2', '-', []),
-    new PanelButton('Test3', '-', []),
-    new PanelButton('Test4', '-', [])
+    ])
 ];
 
 export class PanelProvider implements vscode.TreeDataProvider<PanelButton> {
@@ -62,30 +60,6 @@ export class PanelProvider implements vscode.TreeDataProvider<PanelButton> {
 
     getTreeItem(element: PanelButton): vscode.TreeItem {
         switch (element.label) {
-            case 'Test1':
-                element.iconPath = {    
-                    light: path.join(__filename, '..', '..', 'resources', 'light', 'fix.svg'),
-                    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'fix.svg')
-                };
-                break;
-            case 'Test2':
-                element.iconPath = {    
-                    light: path.join(__filename, '..', '..', 'resources', 'light', 'note.svg'),
-                    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'note.svg')
-                };
-                break;
-            case 'Test3':
-                element.iconPath = {    
-                    light: path.join(__filename, '..', '..', 'resources', 'light', 'review.svg'),
-                    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'review.svg')
-                };
-                break;
-            case 'Test4':
-                element.iconPath = {    
-                    light: path.join(__filename, '..', '..', 'resources', 'light', 'todo.svg'),
-                    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'todo.svg')
-                };
-                break;
             default:
                 break;
         }
@@ -108,8 +82,23 @@ export class PanelProvider implements vscode.TreeDataProvider<PanelButton> {
     }
 }
 
+// FIX!
 export function getButtonByName(name: string): PanelButton | undefined {
-    return panelButtonArray.find(e => e.label === name);
+    function findNested(array: PanelButton[]): PanelButton | undefined {
+        for (let i = 0; i < array.length; i++) {
+            if (array[i].label === name) {
+                return array[i];
+            }    
+        }
+        for (let i = 0; i < array.length; i++) {
+            let temp = findNested([...array[i].nested_original, ...array[i].nested]);
+            if (temp) {
+                return temp;
+            }
+        }
+        return undefined;
+    }
+    return findNested(panelButtonArray);
 }
 
 /*
@@ -125,6 +114,11 @@ export function getButtonByName(name: string): PanelButton | undefined {
 export async function panelEventHandler(ref: { object: PanelButton }) {
     let button = ref.object;
     switch (button.label) {
+        case '...':
+            {
+                console.log(getButtonByName('Comment Markers'));
+                console.log(getButtonByName('Update Markers'));
+            } break;
         case 'Open settings.json':
             {
                 vscode.commands.executeCommand('workbench.action.openGlobalSettings');
@@ -141,11 +135,27 @@ export async function panelEventHandler(ref: { object: PanelButton }) {
                     break;
                 button.nested = [];
                 for (let i = 0; i < vscode.window.activeTextEditor.document.lineCount; ++i) {
-                    const line = vscode.window.activeTextEditor.document.lineAt(i).text;
-                    if (!line.includes('//'))
-                        continue;
-                    button.nested.push(new PanelButton(line, '-', []));
-                    button.setCollapsibleExpanded();
+                    const line = vscode.window.activeTextEditor.document.lineAt(i).text.trim();
+                    if (line.toUpperCase().startsWith('// NOTE ') || (line.toUpperCase().startsWith('// NOTE:'))) {
+                        let temp = new PanelButton(line.slice(8).trim(), 'Note on line ' + (i + 1), []);
+                        temp.setIcon('note.svg', 'note.svg');
+                        button.nested.push(temp);
+                    }
+                    if (line.toUpperCase().startsWith('// TODO ') || (line.toUpperCase().startsWith('// TODO:'))) {
+                        let temp = new PanelButton(line.slice(8).trim(), 'Todo on line ' + (i + 1), []);
+                        temp.setIcon('todo.svg', 'todo.svg');
+                        button.nested.push(temp);
+                    }
+                    if (line.toUpperCase().startsWith('// FIX ') || (line.toUpperCase().startsWith('// FIX:'))) {
+                        let temp = new PanelButton(line.slice(7).trim(), 'Fix on line ' + (i + 1), []);
+                        temp.setIcon('fix.svg', 'fix.svg');
+                        button.nested.push(temp);
+                    }
+                    if (line.toUpperCase().startsWith('// REVIEW ') || (line.toUpperCase().startsWith('// REVIEW:'))) {
+                        let temp = new PanelButton(line.slice(10).trim(), 'Review on line ' + (i + 1), []);
+                        temp.setIcon('review.svg', 'review.svg');
+                        button.nested.push(temp);
+                    }
                 }
             } break;
         default:
