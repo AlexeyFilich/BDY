@@ -1,15 +1,18 @@
-import * as vscode from 'vscode';
-import { PanelButton } from './PanelButton'
-import * as SettingsManager from './SettingsManager'
+import * as vscode from "vscode";
+import { PanelButton } from "./PanelButton";
+
+import * as SettingsManager from "./Managers/SettingsManager";
+import * as MarkerManager from "./Managers/MarkerManager";
 
 export class PanelProvider implements vscode.TreeDataProvider<PanelButton> {
     pool: PanelButton[];
 
     constructor(private workspaceRoot: string) {
         this.pool = new Array(
-            new PanelButton('...', '', undefined, () => {}),
+            new PanelButton("...", "", undefined, undefined, () => {}),
         );
         this.addButtonToPool(SettingsManager.getItems());
+        this.addButtonToPool(MarkerManager.getItems());
     }
 
     addButtonToPool(element: PanelButton | PanelButton[]) {
@@ -40,7 +43,6 @@ export class PanelProvider implements vscode.TreeDataProvider<PanelButton> {
     }
 
     getParent(element: PanelButton): vscode.ProviderResult<PanelButton> | undefined {
-        console.log(element.parent)
         return element.parent;
     }
 
